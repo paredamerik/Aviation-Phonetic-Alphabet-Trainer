@@ -2,11 +2,6 @@ name: Build Executable
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Release Version (e.g., v0.2.0)'
-        required: true
-        default: 'v0.2.0'
 
 permissions:
   contents: write
@@ -16,55 +11,50 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      # 1. Checkout your repository code
       - name: Check out repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # 2. Set up Python environment
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.14'
 
-      # 3. Install dependencies and PyInstaller
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller Pillow
           if (Test-Path "requirements.txt") { pip install -r requirements.txt }
 
-      # 4. Run PyInstaller to build the .exe using your exact file names
       - name: Build with PyInstaller
         run: |
           pyinstaller --onefile --windowed --icon=app_icon.ico alpha_trainer.py
 
-      # 5. Programmatically create the tag, draft release, upload asset, and publish
-      - name: Create Tag, Draft Release, and Upload Asset
+      - name: Create Unique Tag, Draft Release, and Upload Asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
         run: |
-          $tagName = "${{ github.event.inputs.version }}"
-          Write-Host "Target Version/Tag: $tagName"
+          # Generate a 100% unique timestamp-based version tag automatically
+          $tagName = "v" + (Get-Date -Format "yyyy.MM.dd-HHmm")
+          Write-Host "Generated Unique Target Tag: $tagName"
 
-          # Configure git identity for the runner
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Create and push the tag safely from the runner
+          # Push the fresh unique tag
           git tag "$tagName"
           git push origin "$tagName"
 
-          # Create the release as a draft first (bypasses immutable lock)
+          # Create draft release
           Write-Host "Creating draft release wrapper..."
           gh release create "$tagName" --draft --title "Release $tagName" --notes "Automated build for alpha_trainer.exe"
 
-          # Upload the executable asset to the draft release
+          # Upload asset safely while in draft
           Write-Host "Uploading executable asset..."
           gh release upload "$tagName" dist/alpha_trainer.exe --clobber
 
-          # Publish the release
+          # Publish release
           Write-Host "Publishing final release..."
           gh release edit "$tagName" --draft=$false
