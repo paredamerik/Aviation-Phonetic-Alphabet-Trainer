@@ -36,11 +36,22 @@ jobs:
         run: |
           pyinstaller --onefile --windowed --icon=app_icon.ico alpha_trainer.py
 
-      # 5. Upload Release Asset (Draft first to satisfy immutable rules)
-      - name: Upload Release Asset
-        uses: softprops/action-gh-release@v3
-        with:
-          files: dist/alpha_trainer.exe
-          draft: true       # 👈 Unlocks the release for asset upload
+      # 5. Create release safely via GitHub CLI (Draft -> Upload -> Publish)
+      - name: Upload Release Asset via GitHub CLI
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $tagName = $env:GITHUB_REF.Replace('refs/tags/', '')
+          Write-Host "Creating draft release for tag: $tagName"
+          
+          # Step A: Create release as a draft first (bypasses immutable lock)
+          gh release create "$tagName" --draft --title "Release $tagName" --notes "Automated build for alpha_trainer.exe"
+          
+          # Step B: Attach the executable file to the draft release
+          Write-Host "Uploading asset..."
+          gh release upload "$tagName" dist/alpha_trainer.exe --clobber
+          
+          # Step C: Publish the release
+          Write-Host "Publishing release..."
+          gh release edit "$tagName" --draft=$false
