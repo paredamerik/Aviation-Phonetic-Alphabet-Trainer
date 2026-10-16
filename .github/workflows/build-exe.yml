@@ -36,12 +36,12 @@ jobs:
         run: |
           pyinstaller --onefile --windowed --icon=app_icon.ico alpha_trainer.py
 
-      # 5. Create draft release, upload .exe, and publish
+      # 5. Create as draft first, upload .exe safely, then publish
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
         with:
           files: dist/alpha_trainer.exe
-          draft: false
+          draft: true      # 👈 Creates it as a draft so GitHub allows the upload
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
