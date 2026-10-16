@@ -5,6 +5,10 @@ on:
     types: [published]
   workflow_dispatch: 
 
+# 👇 THIS IS WHAT FIXES THE PERMISSION ERROR 👇
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -32,7 +36,7 @@ jobs:
         run: |
           pyinstaller --onefile --windowed --icon=app_icon.ico alpha_trainer.py
 
-      # 5. Upload the built .exe only if triggered by a Release
+      # 5. Upload the built .exe to the release
       - name: Upload Release Asset
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
