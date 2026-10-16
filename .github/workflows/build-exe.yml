@@ -3,7 +3,7 @@ name: Build Executable
 on:
   push:
     tags:
-      - 'v*' # Triggers automatically whenever you push a tag starting with 'v' (e.g., v1.0.0)
+      - 'v*'
   workflow_dispatch: 
 
 permissions:
@@ -36,10 +36,12 @@ jobs:
         run: |
           pyinstaller --onefile --windowed --icon=app_icon.ico alpha_trainer.py
 
-      # 5. Automatically create release and upload the built .exe
+      # 5. Create draft release, upload .exe, and publish
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
         with:
           files: dist/alpha_trainer.exe
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
