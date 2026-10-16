@@ -101,7 +101,7 @@ python alpha_trainer.py
 
 ## 🤝 Contributing
 
-Contributions, bug reports, and feature requests are welcome! Feel free to check out the [issues page](https://github.com/paredamerik/aviation-phonetic-trainer/issues).
+Contributions, bug reports, and feature requests are welcome! Feel free to check out the [issues page](https://github.com/paredamerik/Aviation-Phonetic-Alphabet-Trainer/issues).
 
 ---
 
