@@ -36,7 +36,7 @@ jobs:
         run: |
           pyinstaller --onefile --windowed --icon=app_icon.ico alpha_trainer.py
 
-# 5. Attach asset to the existing tag release safely
+# 5. Delete auto-published lock, create clean draft, upload .exe, and publish
       - name: Upload Asset to Release via GitHub CLI
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -45,12 +45,18 @@ jobs:
           $tagName = $env:GITHUB_REF.Replace('refs/tags/', '')
           Write-Host "Target tag: $tagName"
 
-          # Instead of creating a new release (which triggers immutable errors), 
-          # find the release ID automatically created for this tag and upload the asset directly to it.
-          
-          Write-Host "Waiting for GitHub release wrapper to stabilize..."
-          Start-Sleep -Seconds 3
+          # 1. Delete the auto-published release that triggered the immutable lock
+          Write-Host "Clearing immutable release lock..."
+          gh release delete "$tagName" --yes --cleanup-tag=false 2>$null
 
-          # Upload directly to the tag reference using gh release upload
+          # 2. Re-create the release explicitly as a DRAFT (bypasses immutability)
+          Write-Host "Creating draft release wrapper..."
+          gh release create "$tagName" --draft --title "Release $tagName" --notes "Automated build for alpha_trainer.exe"
+
+          # 3. Upload the executable asset to the draft
           Write-Host "Uploading executable asset..."
           gh release upload "$tagName" dist/alpha_trainer.exe --clobber
+
+          # 4. Now publish the release safely
+          Write-Host "Publishing final release..."
+          gh release edit "$tagName" --draft=$false
