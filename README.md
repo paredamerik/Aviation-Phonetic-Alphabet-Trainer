@@ -29,8 +29,6 @@ Install the required Python packages using `pip`:
 ```bash
 pip install sounddevice SpeechRecognition numpy
 
-Here is a professional and comprehensive `README.md` template optimized for your GitHub repository.
-
 ```markdown
 # ✈️ Aviation Phonetic Alphabet Trainer
 
