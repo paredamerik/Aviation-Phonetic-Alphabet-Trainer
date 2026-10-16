@@ -36,8 +36,8 @@ jobs:
         run: |
           pyinstaller --onefile --windowed --icon=app_icon.ico alpha_trainer.py
 
-# 5. Handle release and upload safely without modifying protected tags
-      - name: Create Release and Upload Asset via GitHub CLI
+# 5. Attach asset to the existing tag release safely
+      - name: Upload Asset to Release via GitHub CLI
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
@@ -45,17 +45,12 @@ jobs:
           $tagName = $env:GITHUB_REF.Replace('refs/tags/', '')
           Write-Host "Target tag: $tagName"
 
-          # 1. If a release was already auto-created by GitHub for this tag, delete just the release (not the tag)
-          gh release delete "$tagName" --yes --cleanup-tag=false 2>$null
+          # Instead of creating a new release (which triggers immutable errors), 
+          # find the release ID automatically created for this tag and upload the asset directly to it.
+          
+          Write-Host "Waiting for GitHub release wrapper to stabilize..."
+          Start-Sleep -Seconds 3
 
-          # 2. Create the release as a draft
-          Write-Host "Creating draft release..."
-          gh release create "$tagName" --draft --title "Release $tagName" --notes "Automated build for alpha_trainer.exe"
-
-          # 3. Upload the .exe asset
+          # Upload directly to the tag reference using gh release upload
           Write-Host "Uploading executable asset..."
           gh release upload "$tagName" dist/alpha_trainer.exe --clobber
-
-          # 4. Publish the release
-          Write-Host "Publishing release..."
-          gh release edit "$tagName" --draft=$false
