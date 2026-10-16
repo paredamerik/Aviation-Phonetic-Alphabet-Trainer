@@ -1,11 +1,11 @@
 name: Build Executable
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v*' # Triggers automatically whenever you push a tag starting with 'v' (e.g., v1.0.0)
   workflow_dispatch: 
 
-# 👇 THIS IS WHAT FIXES THE PERMISSION ERROR 👇
 permissions:
   contents: write
 
@@ -36,12 +36,10 @@ jobs:
         run: |
           pyinstaller --onefile --windowed --icon=app_icon.ico alpha_trainer.py
 
-      # 5. Upload the built .exe to the release
+      # 5. Automatically create release and upload the built .exe
       - name: Upload Release Asset
-        if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.release.tag_name }}
           files: dist/alpha_trainer.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
