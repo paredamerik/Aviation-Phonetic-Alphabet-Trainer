@@ -15,7 +15,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      # 2. Set up Python environment (Caching removed to prevent missing file error)
+      # 2. Set up Python environment
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -33,10 +33,11 @@ jobs:
         run: |
           pyinstaller --onefile --windowed --icon=app_icon.ico alpha_trainer.py
 
-      # 5. Upload the built .exe to the GitHub Release assets
+      # 5. Upload the built .exe to the GitHub Release assets (with explicit tag name)
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.event.release.tag_name }}
           files: dist/alpha_trainer.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
