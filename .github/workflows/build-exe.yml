@@ -36,22 +36,28 @@ jobs:
         run: |
           pyinstaller --onefile --windowed --icon=app_icon.ico alpha_trainer.py
 
-      # 5. Create release safely via GitHub CLI (Draft -> Upload -> Publish)
-      - name: Upload Release Asset via GitHub CLI
+# 5. Reset release wrapper, create draft, upload .exe, and publish
+      - name: Create Release and Upload Asset via GitHub CLI
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
         run: |
           $tagName = $env:GITHUB_REF.Replace('refs/tags/', '')
-          Write-Host "Creating draft release for tag: $tagName"
-          
-          # Step A: Create release as a draft first (bypasses immutable lock)
+          Write-Host "Target tag: $tagName"
+
+          # Delete any pre-existing release or tag lock that GitHub auto-created
+          gh release delete "$tagName" --yes 2>$null
+          git push origin --delete "$tagName" 2>$null
+
+          # Re-create the tag fresh from the runner
+          git tag "$tagName"
+          git push origin "$tagName"
+
+          Write-Host "Creating clean draft release..."
           gh release create "$tagName" --draft --title "Release $tagName" --notes "Automated build for alpha_trainer.exe"
-          
-          # Step B: Attach the executable file to the draft release
-          Write-Host "Uploading asset..."
+
+          Write-Host "Uploading executable asset..."
           gh release upload "$tagName" dist/alpha_trainer.exe --clobber
-          
-          # Step C: Publish the release
+
           Write-Host "Publishing release..."
           gh release edit "$tagName" --draft=$false
