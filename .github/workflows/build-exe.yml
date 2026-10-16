@@ -36,10 +36,11 @@ jobs:
         run: |
           pyinstaller --onefile --windowed --icon=app_icon.ico alpha_trainer.py
 
-      # 5. Upload Release Asset using v3 to handle immutable release rules properly
+      # 5. Upload Release Asset (Draft first to satisfy immutable rules)
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v3
         with:
           files: dist/alpha_trainer.exe
+          draft: true       # 👈 Unlocks the release for asset upload
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
